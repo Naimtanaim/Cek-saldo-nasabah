@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cek Saldo Nasabah - SIMPAN PINJAM TOKO ZIZAN</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+:root{
+  --primary:#4f46e5;--violet:#7c3aed;--bg:#f6f7fb;--text:#111827;
+  --muted:#64748b;--line:#e5e7eb;--green:#059669;--red:#dc2626;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;font-family:Inter,system-ui,sans-serif;color:var(--text);
+  background:
+    radial-gradient(circle at 10% 0%,rgba(99,102,241,.13),transparent 28%),
+    radial-gradient(circle at 90% 15%,rgba(139,92,246,.11),transparent 25%),var(--bg);
+}
+.header{
+  background:linear-gradient(120deg,#4338ca,#6366f1 52%,#8b5cf6);
+  color:#fff;padding:28px 18px;text-align:center;box-shadow:0 15px 35px rgba(79,70,229,.22)
+}
+.header h1{margin:0;font-size:24px;font-weight:800}
+.header p{margin:8px 0 0;opacity:.86;font-size:13px}
+.wrap{max-width:900px;margin:28px auto;padding:0 15px}
+.card{
+  background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:22px;
+  box-shadow:0 15px 45px rgba(15,23,42,.08);padding:24px;margin-bottom:18px
+}
+.search-title{font-size:18px;font-weight:800;margin:0 0 7px}
+.sub{font-size:12px;color:var(--muted);margin:0 0 18px}
+.search{display:flex;gap:10px}
+input{
+  flex:1;padding:14px;border:1px solid #dce1ea;border-radius:12px;font-size:15px;
+  outline:none;background:#fff
+}
+input:focus{border-color:#818cf8;box-shadow:0 0 0 4px rgba(99,102,241,.11)}
+button{
+  border:0;border-radius:12px;padding:13px 18px;font-weight:700;color:#fff;cursor:pointer;
+  background:linear-gradient(135deg,var(--primary),var(--violet));box-shadow:0 7px 18px rgba(79,70,229,.22)
+}
+button.secondary{background:#64748b}
+button:hover{filter:brightness(1.04);transform:translateY(-1px)}
+.result{display:none}
+.profile{
+  display:flex;align-items:center;justify-content:space-between;gap:15px;padding-bottom:18px;
+  border-bottom:1px solid var(--line)
+}
+.avatar{
+  width:55px;height:55px;border-radius:16px;display:grid;place-items:center;color:#fff;
+  font-size:23px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--violet))
+}
+.name{font-size:20px;font-weight:800}.id{font-size:12px;color:var(--muted);margin-top:4px}
+.balance{
+  margin-top:18px;padding:23px;border-radius:18px;color:#fff;
+  background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 12px 30px rgba(5,150,105,.18)
+}
+.balance small{opacity:.86}.balance strong{display:block;font-size:31px;margin-top:7px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+.stat{padding:16px;border:1px solid var(--line);border-radius:15px;background:#fff}
+.stat small{display:block;color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase}
+.stat strong{display:block;font-size:17px;margin-top:7px}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:15px;margin-top:15px}
+table{width:100%;border-collapse:collapse;min-width:650px;font-size:12px}
+th{background:#f8fafc;color:var(--muted);font-size:10px;text-transform:uppercase;text-align:left;padding:12px}
+td{padding:12px;border-top:1px solid #eef0f4}
+.in{color:var(--green);font-weight:700}.out{color:var(--red);font-weight:700}
+.notice{padding:13px;border-radius:12px;background:#fff7ed;color:#9a3412;font-size:12px;margin-top:15px;display:none}
+.footer{text-align:center;color:#94a3b8;font-size:11px;padding:10px 0 30px}
+@media(max-width:620px){
+ .search{flex-direction:column}.search button{width:100%}
+ .profile{align-items:flex-start;flex-direction:column}
+ .grid{grid-template-columns:1fr}
+ .balance strong{font-size:26px}
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>💳 CEK SALDO NASABAH</h1>
+  <p>SIMPAN PINJAM TOKO ZIZAN</p>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <h2 class="search-title">Cek saldo dengan NIK KTP</h2>
+    <p class="sub">Cari nasabah menggunakan <strong>Nama Lengkap</strong> atau <strong>No. KTP / NIK</strong>.</p>
+    <div class="search">
+      <input id="kode" placeholder="Ketik nama lengkap atau No. KTP / NIK" autocomplete="off">
+      <button onclick="cekSaldo()">🔎 Cari Saldo</button>
+    </div>
+    <div id="notice" class="notice"></div>
+  </div>
+
+  <div id="result" class="card result">
+    <div class="profile">
+      <div style="display:flex;gap:13px;align-items:center">
+        <div class="avatar" id="avatar">N</div>
+        <div><div class="name" id="nama">-</div><div class="id" id="nikNasabah">-</div></div>
+      </div>
+      <button class="secondary" onclick="salinLink()">🔗 Salin Link</button>
+    </div>
+
+    <div class="balance">
+      <small>Saldo Saat Ini</small>
+      <strong id="saldo">Rp 0</strong>
+    </div>
+
+    <div class="grid">
+      <div class="stat"><small>Total Setoran</small><strong id="setoran">Rp 0</strong></div>
+      <div class="stat"><small>Total Penarikan</small><strong id="tarikan">Rp 0</strong></div>
+      <div class="stat"><small>Jumlah Transaksi</small><strong id="jumlah">0</strong></div>
+    </div>
+
+    <div style="margin-top:24px">
+      <h3 style="margin:0;font-size:16px">📜 Riwayat Transaksi</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tanggal</th><th>No. Transaksi</th><th>Jenis</th><th>Nominal</th><th>Saldo</th><th>Keterangan</th></tr></thead>
+          <tbody id="riwayat"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">© 2026 SIMPAN PINJAM TOKO ZIZAN · Halaman Cek Saldo</div>
+</div>
+
+<script>
+const listNasabah = JSON.parse(localStorage.getItem('zizan_nasabah') || '[]');
+const listTransaksi = JSON.parse(localStorage.getItem('zizan_transaksi') || '[]');
+
+function rp(n){
+  return 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+}
+function norm(s){ return String(s || '').trim().toUpperCase(); }
+
+function cariNasabahByNik(nik){
+  const target = String(nik || '').replace(/\D/g,'');
+  return listNasabah.find(n => {
+    const value = String(n.nik || n.NIK || n.nikKtp || n.nikKTP || n.ktp || '').replace(/\D/g,'');
+    return value === target;
+  });
+}
+
+function cekSaldo(){
+  const query = document.getElementById('kode').value.trim();
+  const notice = document.getElementById('notice');
+  const result = document.getElementById('result');
+
+  if(!query){
+    notice.textContent = 'Silakan masukkan nama lengkap atau No. KTP / NIK.';
+    notice.style.display = 'block';
+    result.style.display = 'none';
+    return;
+  }
+
+  const q = query.toLowerCase();
+  const qNIK = query.replace(/\D/g,'');
+  const candidates = listNasabah.filter(n => {
+    const nama = String(n.nama || '').trim().toLowerCase();
+    const nik = String(n.nik || n.NIK || n.nikKtp || n.nikKTP || n.ktp || '').replace(/\D/g,'');
+    return nama === q || nik === qNIK || nama.includes(q);
+  });
+
+  if(!candidates.length){
+    notice.textContent = 'Nasabah tidak ditemukan. Pastikan nama atau No. KTP / NIK sesuai data.';
+    notice.style.display = 'block';
+    result.style.display = 'none';
+    return;
+  }
+
+  if(candidates.length > 1 && !listNasabah.some(n => String(n.nama||'').trim().toLowerCase() === q)){
+    notice.textContent = 'Ditemukan lebih dari satu nasabah. Ketik nama lebih lengkap atau gunakan No. KTP / NIK.';
+    notice.style.display = 'block';
+    result.style.display = 'none';
+    return;
+  }
+
+  const n = candidates[0];
+  notice.style.display = 'none';
+  result.style.display = 'block';
+
+  const trx = listTransaksi.filter(t => t.nasabahKode === n.kode);
+  let saldo = 0, setor = 0, tarik = 0;
+  const rows = [];
+
+  trx.forEach(t => {
+    const nominal = Number(t.nominal) || 0;
+    if(t.jenis === 'Setor Tunai'){ saldo += nominal; setor += nominal; }
+    else { saldo -= nominal; tarik += nominal; }
+    rows.push({t, saldo, masuk:t.jenis === 'Setor Tunai'});
+  });
+
+  const nikTampil = n.nik || n.NIK || n.nikKtp || n.nikKTP || n.ktp || '-';
+  document.getElementById('avatar').textContent = (n.nama || 'N').charAt(0).toUpperCase();
+  document.getElementById('nama').textContent = n.nama || '-';
+  document.getElementById('nikNasabah').textContent = 'No. KTP / NIK: ' + nikTampil;
+  document.getElementById('saldo').textContent = rp(saldo);
+  document.getElementById('setoran').textContent = rp(setor);
+  document.getElementById('tarikan').textContent = rp(tarik);
+  document.getElementById('jumlah').textContent = trx.length;
+
+  document.getElementById('riwayat').innerHTML = rows.length ? rows.map(x => `
+    <tr>
+      <td>${x.t.tgl || '-'}</td>
+      <td><strong>${x.t.kode || '-'}</strong></td>
+      <td class="${x.masuk ? 'in':'out'}">${x.masuk ? 'Setor Tunai':'Tarik Tunai'}</td>
+      <td class="${x.masuk ? 'in':'out'}">${x.masuk ? '+':'-'}${rp(x.t.nominal)}</td>
+      <td><strong>${rp(x.saldo)}</strong></td>
+      <td>${x.t.ket || '-'}</td>
+    </tr>`).join('') :
+    '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:25px">Belum ada transaksi.</td></tr>';
+
+  // Keep the selected customer in the URL so the same result can be shared.
+  const nikURL = String(nikTampil).replace(/\D/g,'');
+  const url = location.origin + location.pathname + (nikURL ? '?nik=' + encodeURIComponent(nikURL) : '?nama=' + encodeURIComponent(n.nama));
+  history.replaceState(null, '', url);
+}
+
+function salinLink(){
+  const n = cariNasabahYangTampil();
+  if(!n){ alert('Cari nasabah terlebih dahulu.'); return; }
+  const nik = String(n.nik || n.NIK || n.nikKtp || n.nikKTP || n.ktp || '').replace(/\D/g,'');
+  const param = nik ? '?nik=' + encodeURIComponent(nik) : '?nama=' + encodeURIComponent(n.nama || '');
+  const url = location.origin + location.pathname + param;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(url).then(()=>alert('Link cek saldo berhasil disalin.'));
+  }else{
+    prompt('Salin link ini:', url);
+  }
+}
+function cariNasabahYangTampil(){
+  const nama = document.getElementById('nama').textContent.trim();
+  return listNasabah.find(n => String(n.nama || '').trim() === nama);
+}
+
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(location.search);
+  const nik = params.get('nik');
+  const nama = params.get('nama');
+  if(nik){
+    document.getElementById('kode').value = nik.replace(/\D/g,'');
+    cekSaldo();
+  }else if(nama){
+    document.getElementById('kode').value = nama;
+    cekSaldo();
+  }
+});
+</script>
+</body>
+</html>
