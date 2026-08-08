@@ -128,8 +128,20 @@ td{padding:12px;border-top:1px solid #eef0f4}
 </div>
 
 <script>
-const listNasabah = JSON.parse(localStorage.getItem('zizan_nasabah') || '[]');
-const listTransaksi = JSON.parse(localStorage.getItem('zizan_transaksi') || '[]');
+// DATA DUMMY / DEFAULT
+const defaultNasabah = [
+  { kode: 'NSB001', nama: 'Budi Santoso', nik: '3171012345670001' },
+  { kode: 'NSB002', nama: 'Siti Aminah', nik: '3171012345670002' }
+];
+
+const defaultTransaksi = [
+  { nasabahKode: 'NSB001', tgl: '2026-01-10', kode: 'TRX001', jenis: 'Setor Tunai', nominal: 500000, ket: 'Setoran Awal' },
+  { nasabahKode: 'NSB001', tgl: '2026-01-15', kode: 'TRX002', jenis: 'Tarik Tunai', nominal: 100000, ket: 'Penarikan' }
+];
+
+// MENGAMBIL DARI LOCALSTORAGE, JIKA KOSONG PAKAI DATA DEFAULT
+const listNasabah = JSON.parse(localStorage.getItem('zizan_nasabah')) || defaultNasabah;
+const listTransaksi = JSON.parse(localStorage.getItem('zizan_transaksi')) || defaultTransaksi;
 
 function rp(n){
   return 'Rp ' + Number(n || 0).toLocaleString('id-ID');
