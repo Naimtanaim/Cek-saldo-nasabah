@@ -3,263 +3,79 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Cek Saldo Nasabah - SIMPAN PINJAM TOKO ZIZAN</title>
+<title>Cek Saldo Nasabah - Toko Zizan</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-:root{
-  --primary:#4f46e5;--violet:#7c3aed;--bg:#f6f7fb;--text:#111827;
-  --muted:#64748b;--line:#e5e7eb;--green:#059669;--red:#dc2626;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;min-height:100vh;font-family:Inter,system-ui,sans-serif;color:var(--text);
-  background:
-    radial-gradient(circle at 10% 0%,rgba(99,102,241,.13),transparent 28%),
-    radial-gradient(circle at 90% 15%,rgba(139,92,246,.11),transparent 25%),var(--bg);
-}
-.header{
-  background:linear-gradient(120deg,#4338ca,#6366f1 52%,#8b5cf6);
-  color:#fff;padding:28px 18px;text-align:center;box-shadow:0 15px 35px rgba(79,70,229,.22)
-}
-.header h1{margin:0;font-size:24px;font-weight:800}
-.header p{margin:8px 0 0;opacity:.86;font-size:13px}
-.wrap{max-width:900px;margin:28px auto;padding:0 15px}
-.card{
-  background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:22px;
-  box-shadow:0 15px 45px rgba(15,23,42,.08);padding:24px;margin-bottom:18px
-}
-.search-title{font-size:18px;font-weight:800;margin:0 0 7px}
-.sub{font-size:12px;color:var(--muted);margin:0 0 18px}
-.search{display:flex;gap:10px}
-input{
-  flex:1;padding:14px;border:1px solid #dce1ea;border-radius:12px;font-size:15px;
-  outline:none;background:#fff
-}
-input:focus{border-color:#818cf8;box-shadow:0 0 0 4px rgba(99,102,241,.11)}
-button{
-  border:0;border-radius:12px;padding:13px 18px;font-weight:700;color:#fff;cursor:pointer;
-  background:linear-gradient(135deg,var(--primary),var(--violet));box-shadow:0 7px 18px rgba(79,70,229,.22)
-}
-button.secondary{background:#64748b}
-button:hover{filter:brightness(1.04);transform:translateY(-1px)}
-.result{display:none}
-.profile{
-  display:flex;align-items:center;justify-content:space-between;gap:15px;padding-bottom:18px;
-  border-bottom:1px solid var(--line)
-}
-.avatar{
-  width:55px;height:55px;border-radius:16px;display:grid;place-items:center;color:#fff;
-  font-size:23px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--violet))
-}
-.name{font-size:20px;font-weight:800}.id{font-size:12px;color:var(--muted);margin-top:4px}
-.balance{
-  margin-top:18px;padding:23px;border-radius:18px;color:#fff;
-  background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 12px 30px rgba(5,150,105,.18)
-}
-.balance small{opacity:.86}.balance strong{display:block;font-size:31px;margin-top:7px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
-.stat{padding:16px;border:1px solid var(--line);border-radius:15px;background:#fff}
-.stat small{display:block;color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase}
-.stat strong{display:block;font-size:17px;margin-top:7px}
-.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:15px;margin-top:15px}
-table{width:100%;border-collapse:collapse;min-width:650px;font-size:12px}
-th{background:#f8fafc;color:var(--muted);font-size:10px;text-transform:uppercase;text-align:left;padding:12px}
-td{padding:12px;border-top:1px solid #eef0f4}
-.in{color:var(--green);font-weight:700}.out{color:var(--red);font-weight:700}
-.notice{padding:13px;border-radius:12px;background:#fff7ed;color:#9a3412;font-size:12px;margin-top:15px;display:none}
-.footer{text-align:center;color:#94a3b8;font-size:11px;padding:10px 0 30px}
-@media(max-width:620px){
- .search{flex-direction:column}.search button{width:100%}
- .profile{align-items:flex-start;flex-direction:column}
- .grid{grid-template-columns:1fr}
- .balance strong{font-size:26px}
-}
+*{box-sizing:border-box}body{margin:0;background:#f1f5f9;color:#1e293b;font-family:Arial,sans-serif}
+.header{background:#1f4e78;color:white;padding:22px 15px;text-align:center}.header h1{margin:0;font-size:22px}.header p{margin:7px 0 0;font-size:13px}
+.container{max-width:520px;margin:25px auto;padding:0 15px}.card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 5px 20px #0001;margin-bottom:16px}
+h2{font-size:18px;margin:0 0 15px;color:#1f4e78}label{display:block;font-size:13px;font-weight:bold;margin:12px 0 6px}
+input{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:8px;font-size:15px}
+button{width:100%;border:0;border-radius:8px;padding:12px;background:#007bff;color:white;font-weight:bold;font-size:15px;margin-top:15px;cursor:pointer}
+button.secondary{background:#64748b}.error{display:none;background:#fee2e2;color:#991b1b;padding:11px;border-radius:8px;margin-top:12px;font-size:13px}.loading{display:none;text-align:center;color:#475569;margin-top:12px}
+.profile{border-bottom:1px dashed #cbd5e1;padding-bottom:12px;margin-bottom:12px}.profile div{margin:6px 0;font-size:14px}
+.balance{background:#eef6ff;border:1px solid #bfdbfe;border-radius:12px;padding:18px;text-align:center;margin:15px 0}.balance small{display:block;color:#475569}.balance strong{display:block;color:#1f4e78;font-size:28px}
+.row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #e2e8f0;font-size:13px}.muted{color:#64748b;font-size:12px;line-height:1.5}.badge{padding:4px 8px;border-radius:10px;background:#dcfce7;color:#166534;font-weight:bold}
 </style>
 </head>
 <body>
-<div class="header">
-  <h1>💳 CEK SALDO NASABAH</h1>
-  <p>SIMPAN PINJAM TOKO ZIZAN</p>
+<div class="header"><h1>SIMPAN PINJAM TOKO ZIZAN</h1><p>Cek Saldo Nasabah</p></div>
+<div class="container">
+<div class="card">
+<h2>🔎 Cari Data Nasabah</h2>
+<p class="muted">Masukkan Nama atau NIK/KTP. Untuk keamanan, NIK sebaiknya nomor lengkap.</p>
+<label>Nama Lengkap</label><input id="nama" placeholder="Contoh: Budi Santoso">
+<label>NIK / KTP</label><input id="nik" inputmode="numeric" placeholder="Contoh: 3171012345670001">
+<button onclick="cekSaldo()">🔍 Cek Saldo</button>
+<div id="loading" class="loading">Memeriksa database...</div><div id="error" class="error"></div>
 </div>
-
-<div class="wrap">
-  <div class="card">
-    <h2 class="search-title">Cek saldo dengan NIK KTP</h2>
-    <p class="sub">Cari nasabah menggunakan <strong>Nama Lengkap</strong> atau <strong>No. KTP / NIK</strong>.</p>
-    <div class="search">
-      <input id="kode" placeholder="Ketik nama lengkap atau No. KTP / NIK" autocomplete="off">
-      <button onclick="cekSaldo()">🔎 Cari Saldo</button>
-    </div>
-    <div id="notice" class="notice"></div>
-  </div>
-
-  <div id="result" class="card result">
-    <div class="profile">
-      <div style="display:flex;gap:13px;align-items:center">
-        <div class="avatar" id="avatar">N</div>
-        <div><div class="name" id="nama">-</div><div class="id" id="nikNasabah">-</div></div>
-      </div>
-      <button class="secondary" onclick="salinLink()">🔗 Salin Link</button>
-    </div>
-
-    <div class="balance">
-      <small>Saldo Saat Ini</small>
-      <strong id="saldo">Rp 0</strong>
-    </div>
-
-    <div class="grid">
-      <div class="stat"><small>Total Setoran</small><strong id="setoran">Rp 0</strong></div>
-      <div class="stat"><small>Total Penarikan</small><strong id="tarikan">Rp 0</strong></div>
-      <div class="stat"><small>Jumlah Transaksi</small><strong id="jumlah">0</strong></div>
-    </div>
-
-    <div style="margin-top:24px">
-      <h3 style="margin:0;font-size:16px">📜 Riwayat Transaksi</h3>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Tanggal</th><th>No. Transaksi</th><th>Jenis</th><th>Nominal</th><th>Saldo</th><th>Keterangan</th></tr></thead>
-          <tbody id="riwayat"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <div class="footer">© 2026 SIMPAN PINJAM TOKO ZIZAN · Halaman Cek Saldo</div>
+<div id="hasil" class="card" style="display:none">
+<h2>📋 Data Nasabah</h2>
+<div class="profile">
+<div><b>ID Nasabah:</b> <span id="rKode">-</span></div>
+<div><b>Nama:</b> <span id="rNama">-</span></div>
+<div><b>NIK:</b> <span id="rNik">-</span></div>
+<div><b>No. Telepon:</b> <span id="rTlp">-</span></div>
+<div><b>Alamat:</b> <span id="rAlamat">-</span></div>
 </div>
-
+<div class="balance"><small>SALDO SIMPANAN</small><strong id="rSaldo">Rp 0</strong></div>
+<h2>💰 Riwayat Transaksi</h2><div id="riwayat"></div>
+<button class="secondary" onclick="resetHasil()">🔄 Cek Nasabah Lain</button>
+</div>
+</div>
 <script>
-// DATA DUMMY / DEFAULT
-const defaultNasabah = [
-  { kode: 'NSB001', nama: 'Budi Santoso', nik: '3171012345670001' },
-  { kode: 'NSB002', nama: 'Siti Aminah', nik: '3171012345670002' }
-];
+const SUPABASE_URL="https://txnncavqdlqwbarvpwht.supabase.co";
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4bm5jYXZxZGxxd2JhcnZwd2h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzODk0MzMsImV4cCI6MjEwMTk2NTQzM30.Vof9Xp5paDfb5nwnmAhwPJpqtOucP8zuoPxcRb1FAMw";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-const defaultTransaksi = [
-  { nasabahKode: 'NSB001', tgl: '2026-01-10', kode: 'TRX001', jenis: 'Setor Tunai', nominal: 500000, ket: 'Setoran Awal' },
-  { nasabahKode: 'NSB001', tgl: '2026-01-15', kode: 'TRX002', jenis: 'Tarik Tunai', nominal: 100000, ket: 'Penarikan' }
-];
+function rp(v){return "Rp "+Number(v||0).toLocaleString("id-ID")}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function err(m){let e=document.getElementById("error");e.textContent=m;e.style.display="block"}
+function clearErr(){document.getElementById("error").style.display="none"}
 
-// MENGAMBIL DARI LOCALSTORAGE, JIKA KOSONG PAKAI DATA DEFAULT
-const listNasabah = JSON.parse(localStorage.getItem('zizan_nasabah')) || defaultNasabah;
-const listTransaksi = JSON.parse(localStorage.getItem('zizan_transaksi')) || defaultTransaksi;
-
-function rp(n){
-  return 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+async function cekSaldo(){
+ clearErr();let nama=document.getElementById("nama").value.trim(),nik=document.getElementById("nik").value.trim();
+ if(!nama&&!nik)return err("Masukkan Nama atau NIK terlebih dahulu.");
+ if(SUPABASE_URL.includes("PASTE_")||SUPABASE_KEY.includes("PASTE_"))return err("Masukkan Project URL dan Publishable/anon key Supabase pada bagian konfigurasi HTML.");
+ document.getElementById("loading").style.display="block";document.getElementById("hasil").style.display="none";
+ try{
+  let q=db.from("nasabah").select("id,kode,nama,nik,tlp,alamat,tgl");
+  q=nik?q.eq("nik",nik):q.ilike("nama","%"+nama+"%");
+  const {data,error}=await q.limit(10);if(error)throw error;
+  if(!data?.length)return err("Data nasabah tidak ditemukan.");
+  if(data.length>1&&!nik)return err("Ditemukan lebih dari satu nama. Masukkan NIK agar hasil tepat.");
+  const n=data[0];
+  rKode.textContent=n.kode||"-";rNama.textContent=n.nama||"-";rNik.textContent=n.nik||"-";rTlp.textContent=n.tlp||"-";rAlamat.textContent=n.alamat||"-";
+  const {data:t,error:te}=await db.from("transaksi").select("kode,tgl,jenis,nominal,ket").eq("nasabah_id",n.id).order("tgl",{ascending:false});
+  if(te)throw te;
+  let saldo=0;(t||[]).forEach(x=>saldo+=x.jenis==="Setor Tunai"?Number(x.nominal):x.jenis==="Tarik Tunai"?-Number(x.nominal):0);
+  rSaldo.textContent=rp(saldo);
+  riwayat.innerHTML=t?.length?t.slice(0,20).map(x=>`<div class="row"><div><b>${esc(x.jenis)}</b><br><span class="muted">${esc(x.tgl||"")}</span>${x.ket?`<br><span class="muted">${esc(x.ket)}</span>`:""}</div><div style="text-align:right"><b>${x.jenis==="Setor Tunai"?"+":"-"} ${rp(x.nominal)}</b><br><span class="badge">${esc(x.kode)}</span></div></div>`).join(""):"<p class='muted'>Belum ada transaksi.</p>";
+  hasil.style.display="block";
+ }catch(e){console.error(e);err("Gagal mengambil data: "+(e.message||e))}
+ finally{loading.style.display="none"}
 }
-function norm(s){ return String(s || '').trim().toUpperCase(); }
-
-function cariNasabahByNik(nik){
-  const target = String(nik || '').replace(/\D/g,'');
-  return listNasabah.find(n => {
-    const value = String(n.nik || n.NIK || n.nikKtp || n.nikKTP || n.ktp || '').replace(/\D/g,'');
-    return value === target;
-  });
-}
-
-function cekSaldo(){
-  const query = document.getElementById('kode').value.trim();
-  const notice = document.getElementById('notice');
-  const result = document.getElementById('result');
-
-  if(!query){
-    notice.textContent = 'Silakan masukkan nama lengkap atau No. KTP / NIK.';
-    notice.style.display = 'block';
-    result.style.display = 'none';
-    return;
-  }
-
-  const q = query.toLowerCase();
-  const qNIK = query.replace(/\D/g,'');
-  const candidates = listNasabah.filter(n => {
-    const nama = String(n.nama || '').trim().toLowerCase();
-    const nik = String(n.nik || n.NIK || n.nikKtp || n.nikKTP || n.ktp || '').replace(/\D/g,'');
-    return nama === q || nik === qNIK || nama.includes(q);
-  });
-
-  if(!candidates.length){
-    notice.textContent = 'Nasabah tidak ditemukan. Pastikan nama atau No. KTP / NIK sesuai data.';
-    notice.style.display = 'block';
-    result.style.display = 'none';
-    return;
-  }
-
-  if(candidates.length > 1 && !listNasabah.some(n => String(n.nama||'').trim().toLowerCase() === q)){
-    notice.textContent = 'Ditemukan lebih dari satu nasabah. Ketik nama lebih lengkap atau gunakan No. KTP / NIK.';
-    notice.style.display = 'block';
-    result.style.display = 'none';
-    return;
-  }
-
-  const n = candidates[0];
-  notice.style.display = 'none';
-  result.style.display = 'block';
-
-  const trx = listTransaksi.filter(t => t.nasabahKode === n.kode);
-  let saldo = 0, setor = 0, tarik = 0;
-  const rows = [];
-
-  trx.forEach(t => {
-    const nominal = Number(t.nominal) || 0;
-    if(t.jenis === 'Setor Tunai'){ saldo += nominal; setor += nominal; }
-    else { saldo -= nominal; tarik += nominal; }
-    rows.push({t, saldo, masuk:t.jenis === 'Setor Tunai'});
-  });
-
-  const nikTampil = n.nik || n.NIK || n.nikKtp || n.nikKTP || n.ktp || '-';
-  document.getElementById('avatar').textContent = (n.nama || 'N').charAt(0).toUpperCase();
-  document.getElementById('nama').textContent = n.nama || '-';
-  document.getElementById('nikNasabah').textContent = 'No. KTP / NIK: ' + nikTampil;
-  document.getElementById('saldo').textContent = rp(saldo);
-  document.getElementById('setoran').textContent = rp(setor);
-  document.getElementById('tarikan').textContent = rp(tarik);
-  document.getElementById('jumlah').textContent = trx.length;
-
-  document.getElementById('riwayat').innerHTML = rows.length ? rows.map(x => `
-    <tr>
-      <td>${x.t.tgl || '-'}</td>
-      <td><strong>${x.t.kode || '-'}</strong></td>
-      <td class="${x.masuk ? 'in':'out'}">${x.masuk ? 'Setor Tunai':'Tarik Tunai'}</td>
-      <td class="${x.masuk ? 'in':'out'}">${x.masuk ? '+':'-'}${rp(x.t.nominal)}</td>
-      <td><strong>${rp(x.saldo)}</strong></td>
-      <td>${x.t.ket || '-'}</td>
-    </tr>`).join('') :
-    '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:25px">Belum ada transaksi.</td></tr>';
-
-  // Keep the selected customer in the URL so the same result can be shared.
-  const nikURL = String(nikTampil).replace(/\D/g,'');
-  const url = location.origin + location.pathname + (nikURL ? '?nik=' + encodeURIComponent(nikURL) : '?nama=' + encodeURIComponent(n.nama));
-  history.replaceState(null, '', url);
-}
-
-function salinLink(){
-  const n = cariNasabahYangTampil();
-  if(!n){ alert('Cari nasabah terlebih dahulu.'); return; }
-  const nik = String(n.nik || n.NIK || n.nikKtp || n.nikKTP || n.ktp || '').replace(/\D/g,'');
-  const param = nik ? '?nik=' + encodeURIComponent(nik) : '?nama=' + encodeURIComponent(n.nama || '');
-  const url = location.origin + location.pathname + param;
-  if(navigator.clipboard){
-    navigator.clipboard.writeText(url).then(()=>alert('Link cek saldo berhasil disalin.'));
-  }else{
-    prompt('Salin link ini:', url);
-  }
-}
-function cariNasabahYangTampil(){
-  const nama = document.getElementById('nama').textContent.trim();
-  return listNasabah.find(n => String(n.nama || '').trim() === nama);
-}
-
-window.addEventListener('load', () => {
-  const params = new URLSearchParams(location.search);
-  const nik = params.get('nik');
-  const nama = params.get('nama');
-  if(nik){
-    document.getElementById('kode').value = nik.replace(/\D/g,'');
-    cekSaldo();
-  }else if(nama){
-    document.getElementById('kode').value = nama;
-    cekSaldo();
-  }
-});
+function resetHasil(){hasil.style.display="none";nama.value="";nik.value="";clearErr();nama.focus()}
+nama.addEventListener("keydown",e=>{if(e.key==="Enter")cekSaldo()});nik.addEventListener("keydown",e=>{if(e.key==="Enter")cekSaldo()});
 </script>
-</body>
-</html>
+</body></html>
