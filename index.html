@@ -57,8 +57,16 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const rupiah = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
 const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const digits = v => String(v||'').replace(/\D/g,'');
-const fmtDate = v => { if(!v) return '-'; const d=new Date(v); return Number.isNaN(d.getTime())?esc(v):d.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'}); };
-const paymentDate = p => p?.tanggal_pembayaran ?? p?.tgl_pembayaran ?? p?.tgl_bayar ?? p?.tgl ?? p?.created_at ?? p?.createdAt ?? null;
+const fmtDate = v => {
+ if(!v) return '-';
+ // Untuk format YYYY-MM-DD, tampilkan tanggal kalender apa adanya (hindari pergeseran zona waktu).
+ const raw=String(v);
+ const dateOnly=raw.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);
+ if(dateOnly) return new Date(Number(dateOnly[1]),Number(dateOnly[2])-1,Number(dateOnly[3])).toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+ const d=new Date(v);
+ return Number.isNaN(d.getTime())?esc(v):d.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+};
+const paymentDate = p => p?.created_at ?? p?.createdAt ?? p?.tanggal_pembayaran ?? p?.tgl_pembayaran ?? p?.tgl_bayar ?? p?.tanggal_bayar ?? p?.tgl ?? null;
 const paymentTime = p => { const v=paymentDate(p); if(!v) return 0; const d=new Date(v); return Number.isNaN(d.getTime())?0:d.getTime(); };
 function calcTotal(p){
  const nominal=Number(p.nominal)||0, tenor=Number(p.tenor)||1, bunga=Number(p.bunga)||0;
