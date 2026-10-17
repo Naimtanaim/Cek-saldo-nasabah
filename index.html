@@ -58,6 +58,8 @@ const rupiah = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'ID
 const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const digits = v => String(v||'').replace(/\D/g,'');
 const fmtDate = v => { if(!v) return '-'; const d=new Date(v); return Number.isNaN(d.getTime())?esc(v):d.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'}); };
+const paymentDate = p => p?.tanggal_pembayaran ?? p?.tgl_pembayaran ?? p?.tgl_bayar ?? p?.tgl ?? p?.created_at ?? p?.createdAt ?? null;
+const paymentTime = p => { const v=paymentDate(p); if(!v) return 0; const d=new Date(v); return Number.isNaN(d.getTime())?0:d.getTime(); };
 function calcTotal(p){
  const nominal=Number(p.nominal)||0, tenor=Number(p.tenor)||1, bunga=Number(p.bunga)||0;
  return nominal + (nominal*(bunga/100)*tenor);
@@ -82,7 +84,7 @@ function renderResults(data){
  ${loanRows.length?loanRows.map(({p,related,paid,total,remaining,settled})=>`<article class="loan">
  <div class="loan-head"><div><h3>Pinjaman ${esc(p.kode||'-')}</h3><div class="small">Tanggal: ${fmtDate(p.tgl)} · Jenis: ${esc(p.jenis_pinjaman||'Bulanan')}</div></div><span class="pill ${settled?'paid':''}">${settled?'LUNAS':'BELUM LUNAS'}</span></div>
  <div class="loan-grid"><div class="kv"><span>Pokok pinjaman</span><strong>${rupiah(p.nominal)}</strong></div><div class="kv"><span>Bunga</span><strong>${esc(p.bunga||0)}% / ${String(p.jenis_pinjaman||'Bulanan')==='Harian'?'hari':'bulan'}</strong></div><div class="kv"><span>Total tagihan</span><strong>${rupiah(total)}</strong></div><div class="kv"><span>Sudah dibayar</span><strong>${rupiah(paid)}</strong></div><div class="kv"><span>Sisa tagihan</span><strong style="color:${settled?'#15803d':'#b91c1c'}">${rupiah(remaining)}</strong></div><div class="kv"><span>Tenor</span><strong>${esc(p.tenor||'-')} ${String(p.jenis_pinjaman||'Bulanan')==='Harian'?'hari':'bulan'}</strong></div></div>
- <details class="history"><summary>Riwayat pembayaran (${related.length})</summary>${related.length?related.slice().sort((a,b)=>new Date(b.tgl)-new Date(a.tgl)).map(x=>`<div class="payment"><div><strong>${fmtDate(x.tgl)}</strong><br><span>${esc(x.ket||'Pembayaran')}</span></div><strong>${rupiah(x.nominal)}</strong></div>`).join(''):'<p class="small">Belum ada pembayaran tercatat.</p>'}</details>
+ <details class="history"><summary>Riwayat pembayaran (${related.length})</summary>${related.length?related.slice().sort((a,b)=>paymentTime(b)-paymentTime(a)).map(x=>`<div class="payment"><div><strong>${fmtDate(paymentDate(x))}</strong><br><span>${esc(x.ket||'Pembayaran')}</span></div><strong>${rupiah(x.nominal)}</strong></div>`).join(''):'<p class="small">Belum ada pembayaran tercatat.</p>'}</details>
  </article>`).join(''):'<div class="empty">Belum ada data pinjaman untuk nasabah ini.</div>'}
  <p class="notice">Jika ada perbedaan data, silakan hubungi petugas Toko Zizan untuk pemeriksaan.</p>`;
 }
