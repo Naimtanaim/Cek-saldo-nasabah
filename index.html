@@ -27,7 +27,7 @@ button:disabled{opacity:.6;cursor:wait}
 .loan{border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:12px}.loan-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.loan h3{font-size:16px;margin:0 0 5px}.small{font-size:12px;color:var(--muted)}.pill{white-space:nowrap;background:#fff7ed;color:#9a3412;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:750}.pill.paid{background:#dcfce7;color:#166534}
 .loan-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:15px}.kv{padding-top:10px;border-top:1px solid #edf1f6}.kv span{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}.kv strong{font-size:14px}
 .history{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}.history summary{font-size:13px;font-weight:700;cursor:pointer}.payment{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;font-size:13px}.payment:last-child{border:0}.payment span{color:var(--muted)}
-.empty{text-align:center;color:var(--muted);padding:24px 8px;font-size:14px}
+.empty{text-align:center;color:var(--muted);padding:24px 8px;font-size:14px}.pay-status{margin-top:12px;padding:12px;border-radius:10px;background:#fff7ed;color:#9a3412;font-size:13px;line-height:1.5}.pay-status.ok{background:#dcfce7;color:#166534}.pay-status strong{display:block;font-size:14px;margin-bottom:3px}
 footer{text-align:center;color:#94a3b8;font-size:11px;padding:0 16px 24px}
 @media(max-width:540px){header{padding-top:22px}.panel{padding:17px}.stats{grid-template-columns:1fr}.stat{display:flex;justify-content:space-between;align-items:center;gap:8px}.stat span{margin:0}.loan-grid{grid-template-columns:1fr}.loan-head{align-items:flex-start}}
 </style>
@@ -68,6 +68,23 @@ const fmtDate = v => {
 };
 const paymentDate = p => p?.created_at ?? p?.createdAt ?? p?.tanggal_pembayaran ?? p?.tgl_pembayaran ?? p?.tgl_bayar ?? p?.tanggal_bayar ?? p?.tgl ?? null;
 const paymentTime = p => { const v=paymentDate(p); if(!v) return 0; const d=new Date(v); return Number.isNaN(d.getTime())?0:d.getTime(); };
+const localDateKey = v => {
+  if(!v) return '';
+  const s=String(v), m=s.match(/^(\\d{4})-(\\d{2})-(\\d{2})/);
+  if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+  const d=new Date(v);
+  if(Number.isNaN(d.getTime())) return '';
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
+const todayKey = () => {
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
+const daysBetweenKeys = (from,to) => {
+  if(!from||!to) return null;
+  const a=from.split('-').map(Number), b=to.split('-').map(Number);
+  return Math.max(0,Math.floor((Date.UTC(b[0],b[1]-1,b[2])-Date.UTC(a[0],a[1]-1,a[2]))/86400000));
+};
 function calcTotal(p){
  const nominal=Number(p.nominal)||0, tenor=Number(p.tenor)||1, bunga=Number(p.bunga)||0;
  return nominal + (nominal*(bunga/100)*tenor);
@@ -83,14 +100,23 @@ function renderResults(data){
    const related=pays.filter(x=>x.pinjaman_kode===p.kode);
    const paid=related.reduce((s,x)=>s+(Number(x.nominal)||0),0);
    const total=calcTotal(p); const remaining=Math.max(0,total-paid); const settled=remaining<=0;
-   return {p,related,paid,total,remaining,settled};
+    const latestPayment=related.slice().sort((a,b)=>paymentTime(b)-paymentTime(a))[0] || null;
+    const lastPaymentDate=latestPayment ? paymentDate(latestPayment) : null;
+    const lastPaymentKey=localDateKey(lastPaymentDate);
+    const today=todayKey(), startKey=localDateKey(p.tgl);
+    const referenceKey=lastPaymentKey || startKey;
+    const daysSincePayment=referenceKey ? daysBetweenKeys(referenceKey,today) : null;
+    const paidToday=related.some(x=>localDateKey(paymentDate(x))===today);
+    const isDaily=String(p.jenis_pinjaman||'Bulanan').toLowerCase()==='harian';
+    return {p,related,paid,total,remaining,settled,lastPaymentDate,daysSincePayment,paidToday,isDaily};
  });
  const totalAll=loanRows.reduce((s,x)=>s+x.total,0), paidAll=loanRows.reduce((s,x)=>s+x.paid,0), remainAll=loanRows.reduce((s,x)=>s+x.remaining,0);
  root.innerHTML=`<div class="customer"><div class="avatar">👤</div><div><h2>${esc(n.nama||'Nasabah')}</h2><p>Nomor WhatsApp: ${esc(n.tlp||'-')}</p></div></div>
  <div class="stats"><div class="stat"><span>Total seluruh tagihan</span><strong>${rupiah(totalAll)}</strong></div><div class="stat"><span>Total sudah dibayar</span><strong>${rupiah(paidAll)}</strong></div><div class="stat"><span>Sisa tagihan</span><strong>${rupiah(remainAll)}</strong></div></div>
  <h2>Rincian pinjaman</h2>
- ${loanRows.length?loanRows.map(({p,related,paid,total,remaining,settled})=>`<article class="loan">
+ ${loanRows.length?loanRows.map(({p,related,paid,total,remaining,settled,lastPaymentDate,daysSincePayment,paidToday,isDaily})=>`<article class="loan">
  <div class="loan-head"><div><h3>Pinjaman ${esc(p.kode||'-')}</h3><div class="small">Tanggal: ${fmtDate(p.tgl)} · Jenis: ${esc(p.jenis_pinjaman||'Bulanan')}</div></div><span class="pill ${settled?'paid':''}">${settled?'LUNAS':'BELUM LUNAS'}</span></div>
+  ${!settled && isDaily ? `<div class="pay-status ${paidToday?'ok':''}"><strong>${paidToday?'Sudah bayar hari ini':'Belum bayar hari ini'}</strong>${paidToday?'Pembayaran pinjaman ini tercatat hari ini.':(daysSincePayment===null?'Tanggal pembayaran belum tersedia untuk menghitung jumlah hari.':`Sudah ${daysSincePayment} hari sejak pembayaran terakhir${lastPaymentDate?' ('+fmtDate(lastPaymentDate)+')':' sejak tanggal pinjaman ('+fmtDate(p.tgl)+')'}.`)}<strong style="margin-top:8px">Total yang belum dibayar: ${rupiah(remaining)}</strong></div>` : ''}
  <div class="loan-grid"><div class="kv"><span>Pokok pinjaman</span><strong>${rupiah(p.nominal)}</strong></div><div class="kv"><span>Bunga</span><strong>${esc(p.bunga||0)}% / ${String(p.jenis_pinjaman||'Bulanan')==='Harian'?'hari':'bulan'}</strong></div><div class="kv"><span>Total tagihan</span><strong>${rupiah(total)}</strong></div><div class="kv"><span>Sudah dibayar</span><strong>${rupiah(paid)}</strong></div><div class="kv"><span>Sisa tagihan</span><strong style="color:${settled?'#15803d':'#b91c1c'}">${rupiah(remaining)}</strong></div><div class="kv"><span>Tenor</span><strong>${esc(p.tenor||'-')} ${String(p.jenis_pinjaman||'Bulanan')==='Harian'?'hari':'bulan'}</strong></div></div>
  <details class="history"><summary>Riwayat pembayaran (${related.length})</summary>${related.length?related.slice().sort((a,b)=>paymentTime(b)-paymentTime(a)).map(x=>`<div class="payment"><div><strong>${fmtDate(paymentDate(x))}</strong><br><span>${esc(x.ket||'Pembayaran')}</span></div><strong>${rupiah(x.nominal)}</strong></div>`).join(''):'<p class="small">Belum ada pembayaran tercatat.</p>'}</details>
  </article>`).join(''):'<div class="empty">Belum ada data pinjaman untuk nasabah ini.</div>'}
