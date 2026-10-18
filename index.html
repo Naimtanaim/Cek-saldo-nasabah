@@ -9,6 +9,11 @@
 header{background:linear-gradient(135deg,#12335b,#1769aa);color:#fff;padding:28px 18px 56px;text-align:center}
 .logo{font-size:32px}header h1{margin:8px 0;font-size:25px}header p{margin:0;color:#e2efff;font-size:14px}
 main{max-width:820px;margin:-32px auto 36px;padding:0 14px}
+body.results-view header{padding-bottom:44px}
+body.results-view main{margin:18px auto 36px}
+body.results-view #lookupPanel{display:none!important}
+body:not(.results-view) #results{display:none!important}
+.back-button{margin:0 0 14px;background:#e7eef8;color:#12335b}
 .panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 12px 32px #18365a12;margin-bottom:16px}
 h2{font-size:18px;margin:0 0 6px}.hint{font-size:13px;color:var(--muted);line-height:1.5;margin:0 0 18px}
 label{display:block;font-weight:650;font-size:13px;margin:13px 0 7px}
@@ -35,7 +40,7 @@ footer{text-align:center;color:#94a3b8;font-size:11px;padding:0 16px 24px}
 <body>
 <header><div class="logo">🧾</div><h1>Cek Tagihan Nasabah</h1><p>Simpan Pinjam Toko Zizan</p></header>
 <main>
-<section class="panel">
+<section id="lookupPanel" class="panel">
 <h2>Periksa tagihan Anda</h2>
 <p class="hint">Masukkan nama lengkap dan nomor WhatsApp yang terdaftar di Toko Zizan untuk melihat rincian pinjaman dan pembayaran Anda.</p>
 <form id="lookupForm">
@@ -46,7 +51,10 @@ footer{text-align:center;color:#94a3b8;font-size:11px;padding:0 16px 24px}
 <div id="message"></div>
 <p class="notice">Demi keamanan, hasil hanya ditampilkan jika nama dan nomor WhatsApp cocok dengan data terdaftar. Pastikan Anda menggunakan nomor WhatsApp sendiri.</p>
 </section>
-<section id="results" class="panel hidden" aria-live="polite"></section>
+<section id="results" class="panel hidden" aria-live="polite">
+  <button id="backToLookup" type="button" class="back-button">← Kembali ke pencarian</button>
+  <div id="resultsContent"></div>
+</section>
 </main>
 <footer>© Toko Zizan · Informasi tagihan mengikuti catatan yang tersimpan di sistem.</footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -76,7 +84,7 @@ function showMessage(msg, type='error'){
  const el=document.getElementById('message'); el.textContent=msg; el.style.display='block'; el.style.background=type==='info'?'#eff6ff':'#fff1f2'; el.style.color=type==='info'?'#1d4ed8':'#9f1239';
 }
 function renderResults(data){
- const root=document.getElementById('results'); root.classList.remove('hidden');
+ const root=document.getElementById('results'); const content=document.getElementById('resultsContent'); root.classList.remove('hidden');
  const n=data.nasabah||{}; const loans=Array.isArray(data.pinjaman)?data.pinjaman:[];
  const pays=Array.isArray(data.pembayaran)?data.pembayaran:[];
  const loanRows=loans.map(p=>{
@@ -86,7 +94,7 @@ function renderResults(data){
    return {p,related,paid,total,remaining,settled};
  });
  const totalAll=loanRows.reduce((s,x)=>s+x.total,0), paidAll=loanRows.reduce((s,x)=>s+x.paid,0), remainAll=loanRows.reduce((s,x)=>s+x.remaining,0);
- root.innerHTML=`<div class="customer"><div class="avatar">👤</div><div><h2>${esc(n.nama||'Nasabah')}</h2><p>Nomor WhatsApp: ${esc(n.tlp||'-')}</p></div></div>
+ content.innerHTML=`<div class="customer"><div class="avatar">👤</div><div><h2>${esc(n.nama||'Nasabah')}</h2><p>Nomor WhatsApp: ${esc(n.tlp||'-')}</p></div></div>
  <div class="stats"><div class="stat"><span>Total seluruh tagihan</span><strong>${rupiah(totalAll)}</strong></div><div class="stat"><span>Total sudah dibayar</span><strong>${rupiah(paidAll)}</strong></div><div class="stat"><span>Sisa tagihan</span><strong>${rupiah(remainAll)}</strong></div></div>
  <h2>Rincian pinjaman</h2>
  ${loanRows.length?loanRows.map(({p,related,paid,total,remaining,settled})=>`<article class="loan">
@@ -96,6 +104,19 @@ function renderResults(data){
  </article>`).join(''):'<div class="empty">Belum ada data pinjaman untuk nasabah ini.</div>'}
  <p class="notice">Jika ada perbedaan data, silakan hubungi petugas Toko Zizan untuk pemeriksaan.</p>`;
 }
+function showLookupPage(){
+  document.body.classList.remove('results-view');
+  document.getElementById('results').classList.add('hidden');
+  window.scrollTo(0, 0);
+}
+document.getElementById('backToLookup').addEventListener('click',()=>{
+  if(location.hash==='#hasil-tagihan') history.back();
+  else showLookupPage();
+});
+window.addEventListener('popstate',()=>{
+  if(location.hash!=='#hasil-tagihan') showLookupPage();
+});
+
 document.getElementById('lookupForm').addEventListener('submit',async e=>{
  e.preventDefault(); const btn=document.getElementById('submitBtn'); const results=document.getElementById('results'); results.classList.add('hidden'); results.innerHTML='';
  document.getElementById('message').style.display='none';
